@@ -1,91 +1,70 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Задания с геймификацией</title>
+  <meta charset="UTF-8">
+  <title>Геймифицированное задание</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f0f4f8;
-      margin: 0;
+      font-family: sans-serif;
       padding: 2rem;
-    }
-    .task {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      background: #f4f4f4;
       max-width: 600px;
       margin: auto;
     }
-    h2 {
-      margin-top: 0;
+    h1 {
+      font-size: 1.5rem;
     }
     textarea {
       width: 100%;
       height: 100px;
-      padding: 0.5rem;
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
+      margin: 1rem 0;
+      padding: 1rem;
       font-size: 1rem;
     }
     button {
-      background-color: #4CAF50;
+      background: #007bff;
       color: white;
-      padding: 0.75rem 1.5rem;
       border: none;
-      border-radius: 8px;
+      padding: 0.7rem 1.5rem;
       font-size: 1rem;
       cursor: pointer;
     }
-    .success {
-      color: green;
+    #message {
       margin-top: 1rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="task">
-    <h2>Задание 1: Поделись своей мечтой</h2>
-    <p>Опиши, какую цель ты хочешь достичь в этом году, и почему она для тебя важна.</p>
-    <textarea id="answer" placeholder="Напиши свой ответ здесь..."></textarea>
-    <button onclick="submitAnswer()">Отправить</button>
-    <p class="success" id="message"></p>
-  </div>
+  <h1>Задание: Придумай название для нового школьного проекта</h1>
+  <p>Напиши свой ответ ниже:</p>
+  <textarea id="answer" placeholder="Мой ответ..."></textarea>
+  <button onclick="submitAnswer()">Отправить</button>
+  <div id="message"></div>
 
   <script>
     function submitAnswer() {
-      const answer = document.getElementById('answer').value.trim();
-      const message = document.getElementById('message');
-      if (!answer) {
-        message.textContent = 'Пожалуйста, напиши что-нибудь :)';
-        message.style.color = 'red';
-        return;
-      }
+      const answer = document.getElementById('answer').value;
+      const username = 'petrov_teacher';
+      const taskId = 'project_name_idea';
 
-      // Здесь подставляем ID таблицы Google Sheets + Web App URL (Apps Script)
-      fetch('https://script.google.com/macros/s/AKfycbxvmMUnlf-HG5zXzI7ghI1dC4MK_7ld-N6dVHlMzy1v3lthuGs9ZcG8kajw6lgqynJ2/exec', {
+      const formData = new FormData();
+      formData.append('username', username);
+      formData.append('taskId', taskId);
+      formData.append('answer', answer);
+
+      fetch('https://script.google.com/macros/s/AKfycbzZvfqg1I4Qse4l6NVcyfHmnIvoGeoYteAAZw6NkLbHXLAFNdnRXKyjbd5hieKxgCrO/exec', {
         method: 'POST',
-        body: JSON.stringify({
-          taskId: 'task1',
-          answer: answer,
-          username: 'test_user' // Можете добавить авторизацию по Telegram позже
-        })
+        mode: 'no-cors',
+        body: formData
       })
-        .then(res => res.text())
-        .then(data => {
-          message.textContent = 'Ответ отправлен! Спасибо!';
-          message.style.color = 'green';
-          document.getElementById('answer').value = '';
-        })
-        .catch(err => {
-          message.textContent = 'Произошла ошибка. Попробуй ещё раз.';
-          message.style.color = 'red';
-          console.error(err);
-        });
+      .then(() => {
+        document.getElementById('message').innerText = 'Ответ отправлен!';
+        document.getElementById('answer').value = '';
+      })
+      .catch(() => {
+        document.getElementById('message').innerText = 'Ошибка отправки';
+      });
     }
   </script>
 </body>
