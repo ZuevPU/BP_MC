@@ -43,29 +43,34 @@
   <div id="message"></div>
 
   <script>
-    function submitAnswer() {
-      const answer = document.getElementById('answer').value;
-      const username = 'petrov_teacher';
-      const taskId = 'project_name_idea';
 
-      const formData = new FormData();
-      formData.append('username', username);
-      formData.append('taskId', taskId);
-      formData.append('answer', answer);
+  function submitAnswer() {
+    const answer = document.getElementById('answer').value;
+    const username = 'petrov_teacher';
+    const taskId = 'project_name_idea';
 
-      fetch('https://script.google.com/macros/s/AKfycbzZvfqg1I4Qse4l6NVcyfHmnIvoGeoYteAAZw6NkLbHXLAFNdnRXKyjbd5hieKxgCrO/exec', {
-        method: 'POST',
-        mode: 'no-cors',
-        body: formData
-      })
-      .then(() => {
-        document.getElementById('message').innerText = 'Ответ отправлен!';
-        document.getElementById('answer').value = '';
-      })
-      .catch(() => {
-        document.getElementById('message').innerText = 'Ошибка отправки';
-      });
-    }
+    const formData = new FormData();
+    formData.append('username', username);
+    formData.append('taskId', taskId);
+    formData.append('answer', answer);
+
+    fetch('https://script.google.com/macros/s/AKfycbzZvfqg1I4Qse4l6NVcyfHmnIvoGeoYteAAZw6NkLbHXLAFNdnRXKyjbd5hieKxgCrO/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: formData
+    })
+    .then(() => {
+      document.getElementById('message').innerText = 'Ответ отправлен!';
+      document.getElementById('answer').value = '';
+    })
+    .catch(() => {
+      document.getElementById('message').innerText = 'Ошибка отправки';
+    });
+  }
+</script>
+
+
+
   </script>
 </body>
 </html>
