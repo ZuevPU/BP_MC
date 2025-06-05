@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      max-width: 100%;
+      padding: 15px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .tab-container {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      background-color: #eee;
+      cursor: pointer;
+    }
+    .tab.active {
+      background-color: #007aff;
+      color: white;
+    }
+    .content {
+      display: none;
+    }
+    .content.active {
+      display: block;
+    }
+    .task {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .task-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .task-points {
+      color: #007aff;
+      font-size: 14px;
+    }
+    .task-button {
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 15px;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .leaderboard-item {
+      display: flex;
+      justify-content: space-between;
+      background-color: white;
+      border-radius: 10px;
+      padding: 10px 15px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .leaderboard-position {
+      font-weight: bold;
+      width: 30px;
+      text-align: center;
+    }
+    .leaderboard-name {
+      flex: 1;
+      margin: 0 10px;
+    }
+    .leaderboard-score {
+      color: #007aff;
+      font-weight: bold;
+    }
+    .profile-card {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .profile-name {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .profile-level {
+      color: #007aff;
+      margin-bottom: 10px;
+    }
+    .profile-score {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .achievement {
+      display: inline-block;
+      background-color: #f0f0f0;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚀 Game App</h1>
+    </div>
+    
+    <div class="tab-container">
+      <div class="tab active" onclick="switchTab('tasks')">Задания</div>
+      <div class="tab" onclick="switchTab('leaderboard')">Лидеры</div>
+      <div class="tab" onclick="switchTab('profile')">Профиль</div>
+    </div>
+    
+    <div id="tasks-content" class="content active">
+      <h2>Доступные задания</h2>
+      <div id="tasks-list"></div>
+    </div>
+    
+    <div id="leaderboard-content" class="content">
+      <h2>Таблица лидеров</h2>
+      <div id="leaderboard-list"></div>
+    </div>
+    
+    <div id="profile-content" class="content">
+      <div class="profile-card">
+        <div class="profile-name" id="profile-username"></div>
+        <div class="profile-level">Уровень: <span id="profile-level"></span></div>
+        <div class="profile-score"><span id="profile-score"></span> баллов</div>
+        <div>Достижения:</div>
+        <div id="profile-achievements"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Инициализация Telegram WebApp
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    
+    let userId = tg.initDataUnsafe.user?.id || Math.floor(Math.random() * 1000000);
+    let username = tg.initDataUnsafe.user?.username || "User_" + Math.floor(Math.random() * 10000);
+    let userData = null;
+    
+    const API_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL";
+    
+    // Загружаем данные при запуске
+    document.addEventListener('DOMContentLoaded', async function() {
+      await loadUserData();
+      await loadTasks();
+      await loadLeaderboard();
+      updateProfile();
+    });
+    
+    // Переключение между вкладками
+    function switchTab(tabName) {
+      document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabName + '-content').classList.add('active');
+      document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+    }
+    
+    // Загрузка данных пользователя
+    async function loadUserData() {
+      try {
+        const response = await fetch(`${API_URL}?action=get_user&userId=${userId}`);
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          userData = data.data;
+          username = userData.username;
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    }
+    
+    // Загрузка списка заданий
+    async function loadTasks() {
+      try {
+        const response = await fetch(`${API_URL}?action=get_tasks`);
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          const tasksList = document.getElementById('tasks-list');
+          tasksList.innerHTML = '';
+          
+          data.data.forEach(task => {
+            const taskElement = document.createElement('div');
+            taskElement.className = 'task';
+            taskElement.innerHTML = `
+              <div class="task-title">${task.title}</div>
+              <div class="task-description">${task.description}</div>
+              <div class="task-points">+${task.points} баллов</div>
+              <button class="task-button" onclick="completeTask('${task.taskId}')">Выполнить</button>
+            `;
+            tasksList.appendChild(taskElement);
+          });
+        }
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+      }
+    }
+    
+    // Загрузка таблицы лидеров
+    async function loadLeaderboard() {
+      try {
+        const response = await fetch(`${API_URL}?action=get_leaderboard`);
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          const leaderboardList = document.getElementById('leaderboard-list');
+          leaderboardList.innerHTML = '';
+          
+          data.data.forEach((user, index) => {
+            const item = document.createElement('div');
+            item.className = 'leaderboard-item';
+            item.innerHTML = `
+              <div class="leaderboard-position">${index + 1}</div>
+              <div class="leaderboard-name">${user.username}</div>
+              <div class="leaderboard-score">${user.score}</div>
+            `;
+            leaderboardList.appendChild(item);
+          });
+        }
+      } catch (error) {
+        console.error("Error loading leaderboard:", error);
+      }
+    }
+    
+    // Обновление профиля
+    function updateProfile() {
+      if (userData) {
+        document.getElementById('profile-username').textContent = userData.username;
+        document.getElementById('profile-level').textContent = userData.level;
+        document.getElementById('profile-score').textContent = userData.score;
+        
+        const achievementsContainer = document.getElementById('profile-achievements');
+        achievementsContainer.innerHTML = '';
+        
+        userData.achievements.forEach(achievement => {
+          const achievementElement = document.createElement('div');
+          achievementElement.className = 'achievement';
+          achievementElement.textContent = '🏆';
+          achievementElement.title = achievement;
+          achievementsContainer.appendChild(achievementElement);
+        });
+      }
+    }
+    
+    // Выполнение задания
+    async function completeTask(taskId) {
+      try {
+        const response = await fetch(`${API_URL}?action=complete_task&userId=${userId}&taskId=${taskId}`);
+        const data = await response.json();
+        
+        if (data.status === "success") {
+          alert(`Задание выполнено! Вы получили ${data.data.pointsEarned} баллов.`);
+          
+          // Обновляем данные
+          await loadUserData();
+          await loadLeaderboard();
+          updateProfile();
+        } else {
+          alert("Ошибка при выполнении задания: " + data.message);
+        }
+      } catch (error) {
+        console.error("Error completing task:", error);
+        alert("Произошла ошибка при выполнении задания");
+      }
+    }
+  </script>
+</body>
+</html>
